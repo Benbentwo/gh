@@ -3,7 +3,7 @@
 package app
 
 import (
-	"gh/pkg/cmd"
+	"github.com/Benbentwo/gh/pkg/cmd"
 	"os"
 )
 

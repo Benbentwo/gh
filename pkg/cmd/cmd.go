@@ -1,13 +1,14 @@
 package cmd
 
 import (
-	"github.com/Benbentwo/bb/pkg/log"
+	"github.com/Benbentwo/gh/pkg/cmd/profile"
+	"github.com/Benbentwo/gh/pkg/log"
+	"github.com/jenkins-x/jx/pkg/cmd/clients"
 	"github.com/jenkins-x/jx/pkg/cmd/opts"
 	"github.com/jenkins-x/jx/pkg/cmd/templates"
 	"github.com/jenkins-x/jx/pkg/extensions"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
-	// "github.com/Benbentwo/gh/pkg/cmd/profile"
 	"gopkg.in/AlecAivazis/survey.v1/terminal"
 	"io"
 	"os"
@@ -24,8 +25,7 @@ func NewGHCommand(in terminal.FileReader, out terminal.FileWriter, err io.Writer
 		PersistentPreRun: setLoggingLevel,
 		Run:              runHelp,
 	}
-	//log.Logger().Debugf("running %s", baseCommand.CalledAs())
-	commonOpts := NewCommonOptions(in, out, err)
+	commonOpts := opts.NewCommonOptionsWithTerm(clients.NewFactory(), in, out, err)
 	commonOpts.AddBaseFlags(baseCommand)
 	if len(args) == 0 {
 		args = os.Args
@@ -85,13 +85,5 @@ func setLoggingLevel(cmd *cobra.Command, args []string) {
 }
 
 func runHelp(cmd *cobra.Command, args []string) {
-	_ = cmd.Help()
-}
-
-func NewCommonOptions(in terminal.FileReader, out terminal.FileWriter, err io.Writer) *opts.CommonOptions {
-	return &opts.CommonOptions{
-		In:  in,
-		Out: out,
-		Err: err,
-	}
+	cmd.Help()
 }

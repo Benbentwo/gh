@@ -17,7 +17,7 @@ func NewCmdProfile(commonOpts *opts.CommonOptions) *cobra.Command {
 	}
 
 	cmd := &cobra.Command{
-		Use: "Profile",
+		Use: "profile",
 		Run: func(cmd *cobra.Command, args []string) {
 			options.Cmd = cmd
 			options.Args = args
@@ -31,6 +31,7 @@ func NewCmdProfile(commonOpts *opts.CommonOptions) *cobra.Command {
 	// DO NOT DELETE THE FOLLOWING LINE:
 	// Section to add commands to:
 
+	cmd.AddCommand(NewCmdProfileCreate(commonOpts))
 	return cmd
 }
 

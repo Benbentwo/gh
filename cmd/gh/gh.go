@@ -3,7 +3,7 @@ package main
 import (
 	"os"
 
-	"gh/cmd/gh/app"
+	"github.com/Benbentwo/gh/cmd/gh/app"
 )
 
 // Entrypoint for gh command
