@@ -202,7 +202,7 @@ inttestbin: get-test-deps
 	CGO_ENABLED=$(CGO_ENABLED) $(GOTEST) -tags=integration -c github.com/Benbentwo/gh/pkg/cmd -o build/gh-inttest
 
 debuginttest1: inttestbin
-	cd pkg/gh/cmd && dlv --listen=:2345 --headless=true --api-version=2 exec ../../../build/gh-inttest -- -test.run $(TEST)
+	cd pkg/bb/cmd && dlv --listen=:2345 --headless=true --api-version=2 exec ../../../build/bb-inttest -- -test.run $(TEST)
 
 install: $(GO_DEPENDENCIES) ## Install the binary
 	GOBIN=${GOPATH}/bin $(GO) install $(BUILDFLAGS) $(MAIN_SRC_FILE)
@@ -235,7 +235,7 @@ release: clean build test-slow-integration linux # Release the binary
 	git fetch origin refs/tags/v$(VERSION)
 	# Don't create a changelog for the distro
 	@if [[ -z "${DISTRO}" ]]; then \
-		./build/linux/gh step changelog --verbose --header-file=docs/dev/changelog-header.md --version=$(VERSION) --rev=$(PULL_BASE_SHA) --output-markdown=changelog.md --update-release=false; \
+		./build/linux/bb step changelog --verbose --header-file=docs/dev/changelog-header.md --version=$(VERSION) --rev=$(PULL_BASE_SHA) --output-markdown=changelog.md --update-release=false; \
 		GITHUB_TOKEN=$(GITHUB_ACCESS_TOKEN) REV=$(REV) BRANCH=$(BRANCH) BUILDDATE=$(BUILD_DATE) GOVERSION=$(GO_VERSION) ROOTPACKAGE=$(ROOT_PACKAGE) VERSION=$(VERSION) goreleaser release --config=.goreleaser.yml --rm-dist --release-notes=./changelog.md --skip-validate; \
 	else \
 		GITHUB_TOKEN=$(GITHUB_ACCESS_TOKEN) REV=$(REV) BRANCH=$(BRANCH) BUILDDATE=$(BUILD_DATE) GOVERSION=$(GO_VERSION) ROOTPACKAGE=$(ROOT_PACKAGE) VERSION=$(VERSION) goreleaser release --config=.goreleaser.yml --rm-dist; \

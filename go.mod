@@ -22,8 +22,6 @@ replace github.com/Azure/azure-sdk-for-go => github.com/Azure/azure-sdk-for-go v
 
 replace github.com/Azure/go-autorest => github.com/Azure/go-autorest v10.15.5+incompatible
 
-replace github.com/jenkins-x/jx => github.com/jenkins-x/jx v0.0.0-20191002101425-246bdbf20015
-
 go 1.12.4
 
 require (
