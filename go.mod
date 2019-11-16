@@ -22,10 +22,11 @@ replace github.com/Azure/azure-sdk-for-go => github.com/Azure/azure-sdk-for-go v
 
 replace github.com/Azure/go-autorest => github.com/Azure/go-autorest v10.15.5+incompatible
 
+replace github.com/jenkins-x/jx => github.com/jenkins-x/jx v0.0.0-20191002101425-246bdbf20015
+
 go 1.12.4
 
 require (
-	github.com/AlecAivazis/survey/v2 v2.0.4
 	github.com/Benbentwo/utils v0.0.0-20191114032003-1dec7331d54d
 	github.com/Netflix/go-expect v0.0.0-20190729225929-0e00d9168667 // indirect
 	github.com/Pallinder/go-randomdata v1.2.0 // indirect
@@ -43,7 +44,6 @@ require (
 	github.com/spf13/viper v1.4.0
 	github.com/stretchr/testify v1.4.0
 	go.opencensus.io v0.21.0 // indirect
-	gopkg.in/AlecAivazis/survey.v1 v1.8.7
 	gopkg.in/src-d/go-git.v4 v4.13.1 // indirect
 	gopkg.in/yaml.v2 v2.2.4
 	k8s.io/api v0.0.0-20190718183219-b59d8169aab5 // indirect
