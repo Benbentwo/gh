@@ -143,13 +143,13 @@ func (o *ProfileCreateOptions) Run() error {
 	return nil
 }
 
-func AskForString(response *string, message string, defaultValue string, req bool, help string, handles IOFileHandles) {
-	val, err := PickValue(message, defaultValue, req, help, handles)
+func AskForString(response *string, message string, defaultValue string, req bool, help string, o opts.CommonOptions) {
+	val, err := jxutil.PickValue(message, defaultValue, req, help, o.In, o.Out, o.Err)
 	utils.Check(err)
 	*response = val
 }
 func AskForPassword(response *string, message string, help string, handles IOFileHandles) {
-	val, err := PickPassword(message, help, handles)
+	val, err := jxutil.PickPassword(message, help, o.In, o.Out, o.Err)
 	utils.Check(err)
 	*response = val
 }
