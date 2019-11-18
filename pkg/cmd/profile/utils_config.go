@@ -2,10 +2,9 @@ package profile
 
 import (
 	"fmt"
-	"github.com/AlecAivazis/survey/terminal"
 	"github.com/jenkins-x/jx/pkg/util"
 	"github.com/pkg/errors"
-	"gopkg.in/AlecAivazis/survey.v1"
+	"gopkg.in/AlecAivazis/survey.v1/terminal"
 	"io"
 	"io/ioutil"
 	"sigs.k8s.io/yaml"
@@ -13,6 +12,17 @@ import (
 )
 
 // -------------- Section for utils
+// FileWriter provides a minimal interface for Stdin.
+type FileWriter interface {
+	io.Writer
+	Fd() uintptr
+}
+
+// FileReader provides a minimal interface for Stdout.
+type FileReader interface {
+	io.Reader
+	Fd() uintptr
+}
 
 // FileAuthConfigSaver is a ConfigSaver that saves its config to the local filesystem
 type FileAuthConfigSaver struct {
@@ -20,31 +30,22 @@ type FileAuthConfigSaver struct {
 }
 
 type AuthConfig struct {
-	Servers []*AuthServer `json:"servers"`
+	Servers []*GitAuth `json:"servers"`
 
 	DefaultUsername string `json:"defaultusername"`
 	CurrentServer   string `json:"currentserver"`
 }
 
-type AuthServer struct {
-	URL   string      `json:"url"`
-	Users []*UserAuth `json:"users"`
-	Name  string      `json:"name"`
-	Kind  string      `json:"kind"`
-
-	CurrentUser string `json:"currentuser"`
-}
-
-type UserAuth struct {
-	Username    string `json:"username"`
-	ApiToken    string `json:"apitoken"`
-	BearerToken string `json:"bearertoken"`
-	Password    string `json:"password,omitempty"`
-}
+// type UserAuth struct {
+// 	Username    string `json:"username"`
+// 	ApiToken    string `json:"apitoken"`
+// 	BearerToken string `json:"bearertoken"`
+// 	Password    string `json:"password,omitempty"`
+// }
 type IOFileHandles struct {
 	Err io.Writer
-	In  terminal.FileReader
-	Out terminal.FileWriter
+	In  FileReader
+	Out FileWriter
 }
 
 type GitServer struct {
@@ -60,7 +61,7 @@ type GitAuth struct {
 	GitServer GitServer `json:"gitserver"`
 }
 
-func (s *FileAuthConfigSaver) SaveConfig(config *GitAuth) error {
+func (s *FileAuthConfigSaver) SaveConfig(config *AuthConfig) error {
 	fileName := s.FileName
 	if fileName == "" {
 		return fmt.Errorf("no filename defined")
@@ -84,7 +85,7 @@ func CheckRequiredArgs(args ...interface{}) (bool, error) {
 }
 
 // PickValue gets an answer to a prompt from a user's free-form input
-func PickValue(message string, defaultValue string, required bool, help string, handles IOFileHandles) (string, error) {
+func PickValue(message string, defaultValue string, required bool, help string, in terminal.FileReader, out terminal.FileWriter, outErr io.Writer) (string, error) {
 	answer := ""
 	prompt := &survey.Input{
 		Message: message,
@@ -95,8 +96,13 @@ func PickValue(message string, defaultValue string, required bool, help string, 
 	if !required {
 		validator = nil
 	}
-	surveyOpts := survey.WithStdio(handles.In, handles.Out, handles.Err)
-	err := survey.AskOne(prompt, &answer, validator, surveyOpts)
+	surveyOpts := survey.WithStdio(in, out, outErr)
+	var err error
+	if required {
+		err = survey.AskOne(prompt, &answer, validator, surveyOpts)
+	} else {
+		err = survey.AskOne(prompt, &answer, nil, surveyOpts)
+	}
 	if err != nil {
 		return "", err
 	}
@@ -104,17 +110,39 @@ func PickValue(message string, defaultValue string, required bool, help string, 
 }
 
 // PickPassword gets a password (via hidden input) from a user's free-form input
-func PickPassword(message string, help string, handles IOFileHandles) (string, error) {
+func PickPasswordNotReq(message string, required bool, help string, in terminal.FileReader, out terminal.FileWriter, outErr io.Writer) (string, error) {
 	answer := ""
 	prompt := &survey.Password{
 		Message: message,
 		Help:    help,
 	}
-	validator := survey.Required
-	surveyOpts := survey.WithStdio(handles.In, handles.Out, handles.Err)
-	err := survey.AskOne(prompt, &answer, validator, surveyOpts)
+	surveyOpts := survey.WithStdio(in, out, outErr)
+	err := survey.AskOne(prompt, &answer, nil, surveyOpts)
 	if err != nil {
 		return "", err
 	}
 	return strings.TrimSpace(answer), nil
+}
+
+// LoadConfig loads the configuration from the users JX config directory
+func (s *FileAuthConfigSaver) LoadConfig() (*AuthConfig, error) {
+	config := &AuthConfig{}
+	fileName := s.FileName
+	if fileName != "" {
+		exists, err := util.FileExists(fileName)
+		if err != nil {
+			return config, fmt.Errorf("Could not check if file exists %s due to %s", fileName, err)
+		}
+		if exists {
+			data, err := ioutil.ReadFile(fileName)
+			if err != nil {
+				return config, fmt.Errorf("Failed to load file %s due to %s", fileName, err)
+			}
+			err = yaml.Unmarshal(data, config)
+			if err != nil {
+				return config, fmt.Errorf("Failed to unmarshal YAML file %s due to %s", fileName, err)
+			}
+		}
+	}
+	return config, nil
 }

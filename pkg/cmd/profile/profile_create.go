@@ -1,13 +1,16 @@
 package profile
 
 import (
-	"github.com/Benbentwo/utils"
+	"github.com/Benbentwo/bb/pkg/log"
+	utils "github.com/Benbentwo/go-utils"
 	"github.com/jenkins-x/jx/pkg/cmd/helper"
 	"github.com/jenkins-x/jx/pkg/cmd/opts"
 	"github.com/jenkins-x/jx/pkg/cmd/templates"
-	jxutil "github.com/jenkins-x/jx/pkg/util"
+	"github.com/jenkins-x/jx/pkg/util"
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
+	"os"
+	"strings"
 )
 
 // options for the command
@@ -73,15 +76,17 @@ func NewCmdProfileCreate(commonOpts *opts.CommonOptions) *cobra.Command {
 	cmd.Flags().StringVarP(&options.ServerName, "servername", "s", "",
 		"The Git Server Name, this is an alias for the url")
 
-	cmd.Flags().StringVarP(&options.ServerUrl, "serverurl", "u", "https://github.com",
+	cmd.Flags().StringVarP(&options.ServerUrl, "serverurl", "u", "",
 		"The Git Server Url, this is the url for the server")
 
 	// --- optional for command (keeping separate so functions can be used as lib) ---
-	cmd.Flags().StringVarP(&options.Dir, "dir", "d", ".gh",
-		"The file to write to inside of a directory")
-
-	cmd.Flags().StringVarP(&options.FileName, "filename", "f", "gitAuth.yaml",
-		"The file to write to inside of a directory")
+	// cmd.Flags().StringVarP(&options.Dir, "dir", "d", "",
+	// 	"The file to write to inside of a directory")
+	//
+	// cmd.Flags().StringVarP(&options.FileName, "filename", "f", "gitAuth.yaml",
+	// 	"The file to write to inside of a directory")
+	options.Dir = ".gh"
+	options.FileName = "gitAuth.yaml"
 
 	return cmd
 }
@@ -96,35 +101,39 @@ func (o *ProfileCreateOptions) Run() error {
 			return errors.Wrap(err, "Missing required arguments to run in batch mode")
 		}
 	} else {
-		var handles = IOFileHandles{
-			Err: o.Err,
-			In:  o.In,
-			Out: o.Out,
-		}
+		// var handles = IOFileHandles{
+		// 	Err: o.Err,
+		// 	In:  o.In,
+		// 	Out: o.Out,
+		// }
 		if o.Name == "" {
 			AskForString(&o.Name, "What is your Git Name", "",
-				true, "Git Name", handles)
+				true, "Git Name", *o.CommonOptions)
 		}
 		if o.Alias == "" {
 			AskForString(&o.Alias, "What is the Alias for this profile", "",
-				true, "Name the profile something unique", handles)
+				true, "Name the profile something unique", *o.CommonOptions)
 		}
 		if o.Email == "" {
 			AskForString(&o.Email, "What is the Email Address for this git profile", "",
-				true, "what email address is tied to this account", handles)
+				true, "what email address is tied to this account", *o.CommonOptions)
 		}
 		if o.ServerName == "" {
 			AskForString(&o.ServerName, "What is the Server Name for this profile", "",
-				true, "Name the server something unique, like GHE_Benbentwo", handles)
+				true, "Name the server something unique, like GHE_Benbentwo", *o.CommonOptions)
 		}
 		if o.ServerUrl == "" {
-			AskForString(&o.ServerUrl, "What is the Server Url for this profile", "",
-				true, "Name the profile something unique", handles)
+			AskForString(&o.ServerUrl, "What is the Server Url for this profile", "https://github.com",
+				true, "Name the profile something unique", *o.CommonOptions)
 		}
 		if o.ApiToken == "" {
-			AskForPassword(&o.Alias, "What is the ApiToken for this profile",
-				"Enter your api token, it will be hidden to the console", handles)
+			AskForPassword(&o.ApiToken, "What is the ApiToken for this profile", false,
+				"Enter your api token, it will be hidden to the console", *o.CommonOptions)
 		}
+		// if o.Dir == "" {
+		// 	AskForString(&o.Dir, "What is Dir would you like to place this in","~/.gh", false,
+		// 		"Enter a path, or hit enter for default", *o.CommonOptions)
+		// }
 
 	}
 	// creates ~/.gh if it doesn't exist
@@ -132,24 +141,36 @@ func (o *ProfileCreateOptions) Run() error {
 	utils.Check(err)
 	utils.Info(path)
 
-	totalPath := jxutil.StripTrailingSlash(o.Dir) + "/" + o.FileName
+	totalPath := "~/" + util.StripTrailingSlash(o.Dir) + "/" + o.FileName
+	replacer := strings.NewReplacer("~", os.Getenv("HOME"))
+	totalPath = replacer.Replace(totalPath)
+	log.Logger().Infof("Total Path: %s", totalPath)
 	fileAuthConfigSaver := FileAuthConfigSaver{
 		FileName: totalPath,
 	}
+
+	authConfig, err := fileAuthConfigSaver.LoadConfig()
+	if err != nil {
+		return err
+	}
+	log.Logger().Infof("Total Path save: %s", fileAuthConfigSaver.FileName)
 	gitAuth := o.CreateGitAuth()
-	err = fileAuthConfigSaver.SaveConfig(&gitAuth)
+	log.Logger().Infof("GitAuth: %s", gitAuth)
+
+	authConfig.Servers = append(authConfig.Servers, &gitAuth)
+	err = fileAuthConfigSaver.SaveConfig(authConfig)
 	utils.Check(err)
 
 	return nil
 }
 
 func AskForString(response *string, message string, defaultValue string, req bool, help string, o opts.CommonOptions) {
-	val, err := jxutil.PickValue(message, defaultValue, req, help, o.In, o.Out, o.Err)
+	val, err := PickValue(message, defaultValue, req, help, o.In, o.Out, o.Err)
 	utils.Check(err)
 	*response = val
 }
-func AskForPassword(response *string, message string, help string, handles IOFileHandles) {
-	val, err := jxutil.PickPassword(message, help, o.In, o.Out, o.Err)
+func AskForPassword(response *string, message string, required bool, help string, o opts.CommonOptions) {
+	val, err := PickPasswordNotReq(message, required, help, o.In, o.Out, o.Err)
 	utils.Check(err)
 	*response = val
 }
