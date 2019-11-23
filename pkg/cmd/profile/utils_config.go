@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"github.com/jenkins-x/jx/pkg/util"
 	"github.com/pkg/errors"
+	"gopkg.in/AlecAivazis/survey.v1"
 	"gopkg.in/AlecAivazis/survey.v1/terminal"
 	"io"
 	"io/ioutil"
