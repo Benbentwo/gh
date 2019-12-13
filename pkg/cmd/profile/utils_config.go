@@ -2,6 +2,7 @@ package profile
 
 import (
 	"fmt"
+	"github.com/Benbentwo/gh/pkg/log"
 	"github.com/jenkins-x/jx/pkg/util"
 	"github.com/pkg/errors"
 	"gopkg.in/AlecAivazis/survey.v1"
@@ -123,6 +124,23 @@ func PickPasswordNotReq(message string, required bool, help string, in terminal.
 		return "", err
 	}
 	return strings.TrimSpace(answer), nil
+}
+
+// Confirm prompts the user to confirm something
+func Confirm(message string, defaultValue bool, help string, in terminal.FileReader, out terminal.FileWriter, outErr io.Writer) bool {
+	answer := defaultValue
+	prompt := &survey.Confirm{
+		Message: message,
+		Default: defaultValue,
+		Help:    help,
+	}
+	surveyOpts := survey.WithStdio(in, out, outErr)
+	err := survey.AskOne(prompt, &answer, nil, surveyOpts)
+	if err != nil {
+		panic(err)
+	}
+	log.Blank()
+	return answer
 }
 
 // LoadConfig loads the configuration from the users JX config directory

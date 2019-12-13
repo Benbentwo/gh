@@ -1,6 +1,7 @@
 package cmd
 
 import (
+	"github.com/Benbentwo/gh/pkg/cmd/initialize"
 	"github.com/Benbentwo/gh/pkg/cmd/profile"
 	"github.com/Benbentwo/gh/pkg/log"
 	"github.com/jenkins-x/jx/pkg/cmd/opts"
@@ -28,6 +29,7 @@ func NewGHCommand(in terminal.FileReader, out terminal.FileWriter, err io.Writer
 	}
 	commonOpts.AddBaseFlags(baseCommand)
 	baseCommand.AddCommand(profile.NewCmdProfile(commonOpts))
+	baseCommand.AddCommand(initialize.NewCmdInit(commonOpts))
 	return baseCommand
 }
 
