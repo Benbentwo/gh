@@ -1,6 +1,7 @@
 package profile
 
 import (
+	"github.com/AlecAivazis/survey/v2/terminal"
 	"github.com/Benbentwo/utils"
 	"github.com/jenkins-x/jx/pkg/cmd/helper"
 	"github.com/jenkins-x/jx/pkg/cmd/opts"
@@ -8,6 +9,7 @@ import (
 	jxutil "github.com/jenkins-x/jx/pkg/util"
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
+	"io"
 )
 
 // options for the command
@@ -89,41 +91,35 @@ func NewCmdProfileCreate(commonOpts *opts.CommonOptions) *cobra.Command {
 func (o *ProfileCreateOptions) Run() error {
 
 	argsPass, err := CheckRequiredArgs(o.Name, o.Alias, o.Email, o.ServerName, o.ServerUrl)
-	// utils.Check(err)
 
 	if o.CommonOptions.BatchMode {
 		if !argsPass {
 			return errors.Wrap(err, "Missing required arguments to run in batch mode")
 		}
 	} else {
-		var handles = IOFileHandles{
-			Err: o.Err,
-			In:  o.In,
-			Out: o.Out,
-		}
 		if o.Name == "" {
 			AskForString(&o.Name, "What is your Git Name", "",
-				true, "Git Name", handles)
+				true, "Git Name", o.In, o.Out, o.Err)
 		}
 		if o.Alias == "" {
 			AskForString(&o.Alias, "What is the Alias for this profile", "",
-				true, "Name the profile something unique", handles)
+				true, "Name the profile something unique", o.In, o.Out, o.Err)
 		}
 		if o.Email == "" {
 			AskForString(&o.Email, "What is the Email Address for this git profile", "",
-				true, "what email address is tied to this account", handles)
+				true, "what email address is tied to this account", o.In, o.Out, o.Err)
 		}
 		if o.ServerName == "" {
 			AskForString(&o.ServerName, "What is the Server Name for this profile", "",
-				true, "Name the server something unique, like GHE_Benbentwo", handles)
+				true, "Name the server something unique, like GHE_Benbentwo", o.In, o.Out, o.Err)
 		}
 		if o.ServerUrl == "" {
 			AskForString(&o.ServerUrl, "What is the Server Url for this profile", "",
-				true, "Name the profile something unique", handles)
+				true, "Name the profile something unique", o.In, o.Out, o.Err)
 		}
 		if o.ApiToken == "" {
 			AskForPassword(&o.Alias, "What is the ApiToken for this profile",
-				"Enter your api token, it will be hidden to the console", handles)
+				"Enter your api token, it will be hidden to the console", o.In, o.Out, o.Err)
 		}
 
 	}
@@ -143,13 +139,15 @@ func (o *ProfileCreateOptions) Run() error {
 	return nil
 }
 
-func AskForString(response *string, message string, defaultValue string, req bool, help string, o opts.CommonOptions) {
-	val, err := jxutil.PickValue(message, defaultValue, req, help, o.In, o.Out, o.Err)
+func AskForString(response *string, message string, defaultValue string, req bool, help string, in terminal.FileReader, out terminal.FileWriter, outErr io.Writer) {
+	//noinspection GoFunctionCall
+	val, err := jxutil.PickValue(message, defaultValue, req, help, in, out, outErr)
 	utils.Check(err)
 	*response = val
 }
-func AskForPassword(response *string, message string, help string, handles IOFileHandles) {
-	val, err := jxutil.PickPassword(message, help, o.In, o.Out, o.Err)
+func AskForPassword(response *string, message string, help string, in terminal.FileReader, out terminal.FileWriter, outErr io.Writer) {
+	//noinspection GoFunctionCall
+	val, err := jxutil.PickPassword(message, help, in, out, outErr)
 	utils.Check(err)
 	*response = val
 }

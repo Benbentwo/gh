@@ -2,14 +2,13 @@ package profile
 
 import (
 	"fmt"
-	"github.com/AlecAivazis/survey/terminal"
 	"github.com/jenkins-x/jx/pkg/util"
 	"github.com/pkg/errors"
-	"gopkg.in/AlecAivazis/survey.v1"
+	"gopkg.in/AlecAivazis/survey.v1/terminal"
+	gitcfg "gopkg.in/src-d/go-git.v4/config"
 	"io"
 	"io/ioutil"
 	"sigs.k8s.io/yaml"
-	"strings"
 )
 
 // -------------- Section for utils
@@ -83,38 +82,42 @@ func CheckRequiredArgs(args ...interface{}) (bool, error) {
 
 }
 
-// PickValue gets an answer to a prompt from a user's free-form input
-func PickValue(message string, defaultValue string, required bool, help string, handles IOFileHandles) (string, error) {
-	answer := ""
-	prompt := &survey.Input{
-		Message: message,
-		Default: defaultValue,
-		Help:    help,
-	}
-	validator := survey.Required
-	if !required {
-		validator = nil
-	}
-	surveyOpts := survey.WithStdio(handles.In, handles.Out, handles.Err)
-	err := survey.AskOne(prompt, &answer, validator, surveyOpts)
-	if err != nil {
-		return "", err
-	}
-	return answer, nil
+func ReadGitProfile() {
+	gitcfg.NewConfig()
 }
 
-// PickPassword gets a password (via hidden input) from a user's free-form input
-func PickPassword(message string, help string, handles IOFileHandles) (string, error) {
-	answer := ""
-	prompt := &survey.Password{
-		Message: message,
-		Help:    help,
-	}
-	validator := survey.Required
-	surveyOpts := survey.WithStdio(handles.In, handles.Out, handles.Err)
-	err := survey.AskOne(prompt, &answer, validator, surveyOpts)
-	if err != nil {
-		return "", err
-	}
-	return strings.TrimSpace(answer), nil
-}
+// // PickValue gets an answer to a prompt from a user's free-form input
+// func PickValue(message string, defaultValue string, required bool, help string, handles IOFileHandles) (string, error) {
+// 	answer := ""
+// 	prompt := &survey.Input{
+// 		Message: message,
+// 		Default: defaultValue,
+// 		Help:    help,
+// 	}
+// 	validator := survey.Required
+// 	if !required {
+// 		validator = nil
+// 	}
+// 	surveyOpts := survey.WithStdio(handles.In, handles.Out, handles.Err)
+// 	err := survey.AskOne(prompt, &answer, validator, surveyOpts)
+// 	if err != nil {
+// 		return "", err
+// 	}
+// 	return answer, nil
+// }
+//
+// // PickPassword gets a password (via hidden input) from a user's free-form input
+// func PickPassword(message string, help string, handles IOFileHandles) (string, error) {
+// 	answer := ""
+// 	prompt := &survey.Password{
+// 		Message: message,
+// 		Help:    help,
+// 	}
+// 	validator := survey.Required
+// 	surveyOpts := survey.WithStdio(handles.In, handles.Out, handles.Err)
+// 	err := survey.AskOne(prompt, &answer, validator, surveyOpts)
+// 	if err != nil {
+// 		return "", err
+// 	}
+// 	return strings.TrimSpace(answer), nil
+// }
