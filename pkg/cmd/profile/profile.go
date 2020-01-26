@@ -11,6 +11,7 @@ type ProfileOptions struct {
 	*opts.CommonOptions
 }
 
+// TODO this function should swap and change active profile
 func NewCmdProfile(commonOpts *opts.CommonOptions) *cobra.Command {
 	options := &ProfileOptions{
 		CommonOptions: commonOpts,
@@ -31,7 +32,6 @@ func NewCmdProfile(commonOpts *opts.CommonOptions) *cobra.Command {
 	// DO NOT DELETE THE FOLLOWING LINE:
 	// Section to add commands to:
 
-	cmd.AddCommand(NewCmdProfileCreate(commonOpts))
 	return cmd
 }
 

@@ -1,12 +1,11 @@
 package cmd
 
 import (
+	"github.com/Benbentwo/gh/pkg/cmd/create"
 	"github.com/Benbentwo/gh/pkg/cmd/profile"
 	"github.com/Benbentwo/gh/pkg/log"
 	"github.com/jenkins-x/jx/pkg/cmd/clients"
 	"github.com/jenkins-x/jx/pkg/cmd/opts"
-	"github.com/jenkins-x/jx/pkg/cmd/templates"
-	"github.com/jenkins-x/jx/pkg/extensions"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 	"gopkg.in/AlecAivazis/survey.v1/terminal"
@@ -27,6 +26,8 @@ func NewGHCommand(in terminal.FileReader, out terminal.FileWriter, err io.Writer
 	}
 	commonOpts := opts.NewCommonOptionsWithTerm(clients.NewFactory(), in, out, err)
 	commonOpts.AddBaseFlags(baseCommand)
+	baseCommand.AddCommand(profile.NewCmdProfile(commonOpts))
+	baseCommand.AddCommand(create.NewCmdCreate(commonOpts))
 	if len(args) == 0 {
 		args = os.Args
 	}
@@ -38,30 +39,12 @@ func NewGHCommand(in terminal.FileReader, out terminal.FileWriter, err io.Writer
 			os.Exit(1)
 		}
 	}
-	groups := templates.CommandGroups{
-		// Section to add commands to:
-		{
-			Message: "Installing and initializing gh:",
-			Commands: []*cobra.Command{
-				profile.NewCmdProfile(commonOpts),
-			},
-		},
-	}
+	// the line below (Section to...) is for the generate-function command to add a template_command to.
+	// the line above this and below can be deleted.
+	// DO NOT DELETE THE FOLLOWING LINE:
+	// Section to add commands to:
 
-	groups.Add(baseCommand)
-	getPluginCommandGroups := func() (templates.PluginCommandGroups, bool) {
-		verifier := &extensions.CommandOverrideVerifier{
-			Root:        baseCommand,
-			SeenPlugins: make(map[string]string, 0),
-		}
-		pluginCommandGroups, managedPluginsEnabled, err := commonOpts.GetPluginCommandGroups(verifier)
-		if err != nil {
-			log.Logger().Errorf("%v", err)
-		}
-		return pluginCommandGroups, managedPluginsEnabled
-	}
-
-	templates.ActsAsRootCommand(baseCommand, []string{"options"}, getPluginCommandGroups, groups...)
+	// templates.ActsAsRootCommand(baseCommand, []string{"options"}, getPluginCommandGroups, groups...)
 	return baseCommand
 }
 
